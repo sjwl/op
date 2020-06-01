@@ -41,12 +41,15 @@ type opItem struct {
 
 // Op represents an op session object
 type Op struct {
-	account  string
-	envVar   string
-	password string
-	procAttr *syscall.SysProcAttr
-	runner   func(name string, args ...string) (cmd *exec.Cmd)
-	setEnv   string
+	account   string
+	envVar    string
+	password  string
+	procAttr  *syscall.SysProcAttr
+	runner    func(name string, args ...string) (cmd *exec.Cmd)
+	setEnv    string
+	url       string
+	secretKey string
+	email     string
 }
 
 // Opt represents a function that can operate on an Op pointer
@@ -86,8 +89,17 @@ func (o *Op) getEnv() error {
 		o.setEnv = fmt.Sprintf("%s=%s", o.envVar, envval)
 		return nil
 	}
-	cmd := o.runner("op", "signin", o.account)
-	cmd.SysProcAttr = o.procAttr
+
+	var cmd *exec.Cmd
+	// if we have url, email and secretKey defined then login without dependency on ~/.op/config existing
+	//   this is useful if running from within a container
+	if o.email != "" && o.secretKey != "" && o.url != "" {
+		cmd = o.runner("op", "signin", o.url, o.email, o.secretKey)
+
+	} else {
+		cmd = o.runner("op", "signin", o.account)
+		cmd.SysProcAttr = o.procAttr
+	}
 	if o.password != "" {
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
@@ -100,6 +112,7 @@ func (o *Op) getEnv() error {
 	} else {
 		cmd.Stdin = os.Stdin
 	}
+
 	out, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("unable to sign-in to %s: %v", o.account, err)
@@ -263,6 +276,27 @@ func WithUID(uid int) Opt {
 				Uid: uint32(uid),
 			},
 		}
+	}
+}
+
+// WithSecretKey sets the secret key used for op signin
+func WithSecretKey(secretKey string) Opt {
+	return func(o *Op) {
+		o.secretKey = secretKey
+	}
+}
+
+// WithEmail sets the email used for op signin
+func WithEmail(email string) Opt {
+	return func(o *Op) {
+		o.email = email
+	}
+}
+
+// WithURL sets the url used for op signin
+func WithURL(url string) Opt {
+	return func(o *Op) {
+		o.url = url
 	}
 }
 
