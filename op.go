@@ -198,8 +198,8 @@ func (o *Op) GetTotp(item string) (totp string, err error) {
 	return string(out), nil
 }
 
-// GetSecretNote returns a Secret Note by passing in the item name
-func (o *Op) GetSecretNote(item string) (secretNote string, err error) {
+// GetSecureNote returns a Secret Note by passing in the item name
+func (o *Op) GetSecureNote(item string) (secureNote string, err error) {
 	i, err := o.get("item", item)
 	if err != nil {
 		return "", err
@@ -207,13 +207,13 @@ func (o *Op) GetSecretNote(item string) (secretNote string, err error) {
 	for _, field := range i.Details.Fields {
 		switch field.Name {
 		case "notesPlain":
-			secretNote = field.Value
+			secureNote = field.Value
 		}
 	}
-	if secretNote == "" {
+	if secureNote == "" {
 		return "", fmt.Errorf("couldn't find secret note in '%s'", item)
 	}
-	return secretNote, nil
+	return secureNote, nil
 }
 
 // GetUserPass is a top-level function that wraps the underlying method from Op
