@@ -36,6 +36,7 @@ type opItem struct {
 			Name  string `json:"name"`
 			Value string `json:"value"`
 		} `json:"fields"`
+		NotesPlain string `json:"notesPlain"`
 	} `json:"details"`
 }
 
@@ -199,18 +200,13 @@ func (o *Op) GetTotp(item string) (totp string, err error) {
 }
 
 // GetSecureNote returns a Secret Note by passing in the item name
-func (o *Op) GetSecureNote(item string) (secureNote string, err error) {
+func (o *Op) GetSecureNote(item string) (string, error) {
 	i, err := o.get("item", item)
 	if err != nil {
 		return "", err
 	}
-	for _, field := range i.Details.Fields {
-		switch field.Name {
-		case "notesPlain":
-			secureNote = field.Value
-		}
-	}
-	return secureNote, nil
+
+	return i.Details.NotesPlain, nil
 }
 
 // GetUserPass is a top-level function that wraps the underlying method from Op
