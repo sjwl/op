@@ -210,9 +210,6 @@ func (o *Op) GetSecureNote(item string) (secureNote string, err error) {
 			secureNote = field.Value
 		}
 	}
-	if secureNote == "" {
-		return "", fmt.Errorf("couldn't find secret note in '%s'", item)
-	}
 	return secureNote, nil
 }
 
