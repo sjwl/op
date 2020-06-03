@@ -154,9 +154,11 @@ func (o *Op) runOp(commands ...string) ([]byte, error) {
 		}
 		return cmdOut, fmt.Errorf("error running %s: %s", commands, cmdOut)
 	}
-	last := len(cmdOut) - 1
-	if cmdOut[last] == newLine {
-		cmdOut = cmdOut[:last]
+	if len(cmdOut) > 0 {
+		last := len(cmdOut) - 1
+		if cmdOut[last] == newLine {
+			cmdOut = cmdOut[:last]
+		}
 	}
 	return cmdOut, nil
 }
