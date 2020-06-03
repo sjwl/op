@@ -30,15 +30,17 @@ type opConfig struct {
 	} `json:"accounts"`
 }
 
+type opDetails struct {
+	Fields []struct {
+		Name  string `json:"name,omitempty"`
+		Value string `json:"value,omitempty"`
+	} `json:"fields,omitempty"`
+	NotesPlain string `json:"notesPlain,omitempty"`
+}
+
 type opItem struct {
-	Title   string `json:"title"`
-	Details struct {
-		Fields []struct {
-			Name  string `json:"name"`
-			Value string `json:"value"`
-		} `json:"fields"`
-		NotesPlain string `json:"notesPlain"`
-	} `json:"details"`
+	Title   string    `json:"title"`
+	Details opDetails `json:"details"`
 }
 
 // Op represents an op session object
@@ -171,10 +173,10 @@ func (o *Op) get(itemType, item string) (oi opItem, err error) {
 	return i, nil
 }
 
-func (o *Op) set(itemType, item, category string, oi opItem) error {
+func (o *Op) set(itemType, item, category string, detail opDetails) error {
 
 	// Marshal oi into string then encode
-	encoded, err := encode(oi)
+	encoded, err := encode(detail)
 	if err != nil {
 		return err
 	}
@@ -225,8 +227,9 @@ func (o *Op) GetSecureNote(item string) (string, error) {
 }
 
 // SetSecureNote creates new or replaces existing secure notes
-func (o *Op) SetSecureNote(item string, oi opItem) error {
-	if err := o.set("item", item, "Secure Note", oi); err != nil {
+func (o *Op) SetSecureNote(item, note string) error {
+	detail := opDetails{NotesPlain: note}
+	if err := o.set("item", item, "Secure Note", detail); err != nil {
 		return err
 	}
 	return nil
@@ -370,17 +373,10 @@ func getSigninFromConfig() (string, error) {
 	return "", fmt.Errorf("cannot determine which 1password account to use")
 }
 
-func oiToByte(oi opItem) ([]byte, error) {
-	jsonData, err := json.Marshal(oi)
-	if err != nil {
-		return nil, err
-	}
-	return jsonData, nil
-}
-func encode(oi opItem) (string, error) {
-	data, err := oiToByte(oi)
+func encode(data interface{}) (string, error) {
+	bytes, err := json.Marshal(data)
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(data), nil
+	return base64.StdEncoding.EncodeToString(bytes), nil
 }
