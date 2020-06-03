@@ -22,6 +22,7 @@ const (
 )
 
 var authRequired = regexp.MustCompile("(not currently|Authentication)")
+var doesNotExist = regexp.MustCompile("doesn't seem to be an item")
 
 type opConfig struct {
 	LatestSignIn *string `json:"latest_signin,omitempty"`
@@ -173,6 +174,16 @@ func (o *Op) get(itemType, item string) (oi opItem, err error) {
 	return i, nil
 }
 
+func (o *Op) delete(itemType, item string) error {
+	if cmdOut, err := o.runOp("delete", itemType, item); err != nil {
+		if doesNotExist.FindString(string(cmdOut)) != "" {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
 func (o *Op) set(itemType, item, category string, detail opDetails) error {
 
 	// Marshal oi into string then encode
@@ -228,6 +239,13 @@ func (o *Op) GetSecureNote(item string) (string, error) {
 
 // SetSecureNote creates new or replaces existing secure notes
 func (o *Op) SetSecureNote(item, note string) error {
+
+	// 1Password doesn't replace existing items automatically
+	//  so we will need to delete any existing items first.
+	if err := o.delete("item", item); err != nil {
+		return err
+	}
+
 	detail := opDetails{NotesPlain: note}
 	if err := o.set("item", item, "Secure Note", detail); err != nil {
 		return err
