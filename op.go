@@ -1,7 +1,6 @@
 package op
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/dvsekhvalnov/jose2go/base64url"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -396,5 +396,5 @@ func encode(data interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(bytes), nil
+	return base64url.Encode(bytes), nil
 }
