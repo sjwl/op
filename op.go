@@ -1,6 +1,7 @@
 package op
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -170,6 +171,20 @@ func (o *Op) get(itemType, item string) (oi opItem, err error) {
 	return i, nil
 }
 
+func (o *Op) set(itemType, item, category string, oi opItem) error {
+
+	// Marshal oi into string then encode
+	encoded, err := encode(oi)
+	if err != nil {
+		return err
+	}
+
+	if _, err := o.runOp("create", itemType, category, encoded, "--title", item); err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetUserPass returns the username and password from an item from the active session
 func (o *Op) GetUserPass(item string) (user, pass string, err error) {
 	i, err := o.get("item", item)
@@ -207,6 +222,14 @@ func (o *Op) GetSecureNote(item string) (string, error) {
 	}
 
 	return i.Details.NotesPlain, nil
+}
+
+// SetSecureNote creates new or replaces existing secure notes
+func (o *Op) SetSecureNote(item string, oi opItem) error {
+	if err := o.set("item", item, "Secure Note", oi); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetUserPass is a top-level function that wraps the underlying method from Op
@@ -345,4 +368,19 @@ func getSigninFromConfig() (string, error) {
 		return c.Accounts[0].ShortHand, nil
 	}
 	return "", fmt.Errorf("cannot determine which 1password account to use")
+}
+
+func oiToByte(oi opItem) ([]byte, error) {
+	jsonData, err := json.Marshal(oi)
+	if err != nil {
+		return nil, err
+	}
+	return jsonData, nil
+}
+func encode(oi opItem) (string, error) {
+	data, err := oiToByte(oi)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(data), nil
 }
