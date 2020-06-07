@@ -22,7 +22,7 @@ const (
 )
 
 var authRequired = regexp.MustCompile("(not currently|Authentication)")
-var doesNotExist = regexp.MustCompile("(doesn't seem to be an item|no item found)")
+var doesNotExist = regexp.MustCompile("(doesn't seem to be an item|no item found|not found)")
 
 type opConfig struct {
 	LatestSignIn *string `json:"latest_signin,omitempty"`
